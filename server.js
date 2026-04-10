@@ -3,7 +3,8 @@ import './db.js';
 import personRouts from './routes/person_routes.js';
 import clientRouts from './routes/client_routes.js';
 import express from 'express';
-
+import dotenv from 'dotenv';
+dotenv.config();
 //  Middleware
 app.use(express.json());
 
