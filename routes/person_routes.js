@@ -9,8 +9,9 @@ personRouts.post('/', async (req, res) => {
     try {
         console.log(req.body); //  debug
 
-        //  FIXED HERE
-        const response = await Person.insertMany(req.body);
+        // Use create (not insertMany): insertMany skips `pre('save')`, so passwords stay plain text.
+        const docs = Array.isArray(req.body) ? req.body : [req.body];
+        const response = await Person.create(docs);
 
         res.status(200).json(response);
     } catch (error) {
