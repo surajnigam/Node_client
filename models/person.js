@@ -5,32 +5,27 @@ const personSchema = new mongoose.Schema({
     name: { type: String, required: true },
     age: { type: Number, required: true },
     email: { type: String, required: true },
-    work: { type: String,
-         required: true,
-         enum: ['developer', 'designer', 'manager'] },
+    work: {
+        type: String,
+        required: true,
+        enum: ['developer', 'designer', 'manager']
+    },
     password: { type: String, required: true },
-    username: { type: String, required: true }   
+    username: { type: String, required: true }
 });
 
-//  bcrypt password
-personSchema.pre('save', async function(next) {
-    const person = this;
-    // hash the password only if it is modified 
-    if (!person.isModified('password')) { return next(); }
+// bcrypt password — async hooks must not use `next()` (Mongoose 7+); return / throw instead.
+personSchema.pre('save', async function () {
+    if (!this.isModified('password')) return;
     try {
-    // generate a salt
-    const salt = await bcrypt.genSalt(10);
-        // hash the password
-       
-        const hashedPassword = await bcrypt.hash(person.password, salt);
-        person.password = hashedPassword;
-        next();
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
     } catch (error) {
-        return next(error);
+        throw error;
     }
 });
 
-personSchema.methods.comparePassword = async function(enteredPassword) {
+personSchema.methods.comparePassword = async function (enteredPassword) {
     try {
         //bcrypt compare the candidate password with the password in the database in hash format
         //work add the salt to the entered password and generate hash, and compare it with the stored hash
