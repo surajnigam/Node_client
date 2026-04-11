@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// const mongoUrl = 'mongodb://localhost:27017/dummy_database';
-const mongoUrl = process.env.MONGO_URL_LOCAL;
+const mongoUrl = 'mongodb://localhost:27017/dummy_database';
+// const mongoUrl = process.env.MONGO_URL_LOCAL;
 // const mongoUrl = 'mongodb+srv://nigamsuraj232_db_user:Dbnigam232@nodepro1.xnuzwep.mongodb.net/';
 // const mongoUrl = process.env.MONGO_URL;
 

@@ -36,7 +36,7 @@ app.post('/',  passport.authenticate('local', { session: false }),  (req, res) =
 );*/
 
 // app.use('/person', auth,  personRouts);
-app.use('/person', auth, personRouts);
+app.use('/person',  personRouts);
 // app.use('/person',  personRouts);
 app.use('/client',  clientRouts);
 
