@@ -1,19 +1,26 @@
 import express from 'express';
 import Person from './../models/person.js';
-
+import { jwtAuthmiddleware, generateToken } from './../jwt.js';
 
 const personRouts = express.Router();
 
-//  create a person table into the database
-personRouts.post('/', async (req, res) => {
+export async function handlePersonSignup(req, res) {
     try {
-        console.log(req.body); //  debug
+        const data = { ...req.body };
+        if (data.gmail && !data.email) data.email = data.gmail;
+        delete data.gmail;
 
-        // Use create (not insertMany): insertMany skips `pre('save')`, so passwords stay plain text.
-        const docs = Array.isArray(req.body) ? req.body : [req.body];
-        const response = await Person.create(docs);
+        const newUser = new Person(data);
+        const response = await newUser.save();
+        console.log('user created successfully');
 
-        res.status(200).json(response);
+        const payload = {
+            id: response.id,
+            username: response.username
+        };
+
+        const token = generateToken(payload);
+        res.status(200).json({ response, token });
     } catch (error) {
         console.log(error);
         res.status(500).json({
@@ -21,18 +28,68 @@ personRouts.post('/', async (req, res) => {
             message: 'Failed to create person'
         });
     }
-});
+}
 
-//  get all the persons table data  from the database
-personRouts.get('/', async (req, res) => {
+// personRouts.post('/signup', handlePersonSignup);
+
+export async function handlePersonLogin(req, res) {
+    try {
+        const username = req.query.username ?? req.body?.username;//username from query(link) or body
+        const password = req.query.password ?? req.body?.password;
+
+        if (!username || !password) {
+            return res.status(400).json({
+                message: 'username and password are required (query or body)'
+            });
+        }
+        const user = await Person.findOne({ username });
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+
+        const payload = {
+            id: user.id,
+            username: user.username,
+        };
+
+        const token = generateToken(payload);
+        res.status(200).json({token});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: error.message, message: 'Internal server error' });
+    }
+}
+
+// Login / profile: username + password in query or body. Wrong password → 401 (never list all users).
+// personRouts.get('/login', handlePersonLogin);
+
+export async function handlePersonProfile(req, res) {
+    try {
+        
+        res.status(200).json(req.user);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: error.message, message: 'Internal server error' });
+    }
+}
+
+// personRouts.get('/profile', jwtAuthmiddleware, handlePersonProfile);
+
+export async function handlePerson(req, res) {
     try {
         const response = await Person.find();
         res.status(200).json(response);
     } catch (error) {
         console.log(error);
-        res.status(500).json({error: error.message, message: 'Internal server error'});
+        res.status(500).json({ error: error.message, message: 'Internal server error' });
     }
-});
+}
+
+// personRouts.get('/person', jwtAuthmiddleware, handlePerson);
 
 //  get a person by worktype by id
 personRouts.get('/work/:work', async (req, res) => {

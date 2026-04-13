@@ -1,8 +1,9 @@
 import express from 'express';
 import client from './../models/client.js';
+// import { jwtAuthmiddleware, generateToken } from './../jwt.js';
 const clientRouts = express.Router();
 
-clientRouts.post('/', async (req, res) => {
+clientRouts.post('/',  async (req, res) => {
     try {
         console.log(req.body); //  debug
  

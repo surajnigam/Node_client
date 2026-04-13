@@ -1,44 +1,37 @@
 // import app from './app.js';
 import './db.js';
-import personRouts from './routes/person_routes.js';
+import personRouts, { handlePersonSignup, handlePersonProfile, handlePersonLogin, handlePerson } from './routes/person_routes.js';
+import { jwtAuthmiddleware } from './jwt.js';
 import clientRouts from './routes/client_routes.js';
+import userRouts from './routes/login_details.js';
 import express from 'express';
-const app = express();
 import dotenv from 'dotenv';
+import { configurePassport } from './auth.js';
+
 dotenv.config();
-// auth.js file code we can place here also, but for keeping the server.js clean we add separate file for auth.js
-import { auth } from './auth.js';
 
-//  Middleware
+const app = express();
+
 app.use(express.json());
+configurePassport(app);
 
-
-
-
-
-
-
- 
 // middleware to log the request, end point of api at what time it is called
-const logEndpoit = (req, res, next)=>{
+const logEndpoit = (req, res, next) => {
     console.log(`${req.method}  ${req.url}  ${new Date().toISOString()}`);
     next();
-}
+};
 app.use(logEndpoit);
 
-/*
-app.post('/',  passport.authenticate('local', { session: false }),  (req, res) => {
-        res.json({
-            message: 'Login successful',
-            user: req.user
-        });
-    }
-);*/
-
-// app.use('/person', auth,  personRouts);
-app.use('/person',  personRouts);
-// app.use('/person',  personRouts);
-app.use('/client',  clientRouts);
+// Do not put passport on every `/person` route — POST create would require a prior login.
+// Root aliases (mounting the whole router at `/signup` would make signup `POST /signup/signup` instead).
+// app.post('/signup', handlePersonSignup);
+app.post('/singup', handlePersonSignup);
+app.get('/login', handlePersonLogin);
+// Root alias (router is mounted at /person, so the same handler lives at GET /person/profile too)
+app.get('/profile', jwtAuthmiddleware, handlePersonProfile);
+app.use('/person', jwtAuthmiddleware, handlePerson);
+app.use('/client', jwtAuthmiddleware, clientRouts);
+app.use('/user', userRouts);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
