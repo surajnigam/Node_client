@@ -1,6 +1,6 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
-import Person from './models/person.js';
+import Person from './models/users.js';
 
 // Credentials from JSON body (POST) or query string (GET). Avoid findOne({ username: undefined }).
 passport.use(

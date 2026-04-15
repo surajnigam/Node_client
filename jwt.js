@@ -21,9 +21,13 @@ const jwtAuthmiddleware = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        // Tokens are signed as { user: payload }, so expose payload directly.
+        req.user = decoded.user ?? decoded;
         next();
     } catch (err) {
+        if (err?.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Token expired' });
+        }
         return res.status(401).json({ error: 'Invalid token' });
     }
 };
